@@ -2,3 +2,4 @@
 .idea/
 out/
 p2p-tests.jar
+*.class
