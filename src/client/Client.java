@@ -1,5 +1,8 @@
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.Socket;
@@ -23,13 +26,15 @@ public class Client {
      */
     public PeerInfo queryTracker(String filename) throws IOException {
         try (Socket socket = new Socket(trackerHost, trackerPort);
+             BufferedReader reader = new BufferedReader(
+                     new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8));
              PrintWriter writer = new PrintWriter(
                      new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8), true)) {
 
             writer.print(Message.buildQuery(filename));
             writer.flush();
 
-            Message response = Message.parse(socket.getInputStream());
+            Message response = Message.parse(reader);
             if (response == null) {
                 return null;
             }
@@ -60,13 +65,14 @@ public class Client {
         File destinationFile = new File(savePath);
 
         try (Socket socket = new Socket(peer.getHost(), peer.getPort());
+             BufferedInputStream inputStream = new BufferedInputStream(socket.getInputStream());
              PrintWriter writer = new PrintWriter(
                      new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8), true)) {
 
             writer.print(Message.buildGet(filename));
             writer.flush();
 
-            Message response = Message.parse(socket.getInputStream());
+            Message response = Message.parse(inputStream);
             if (response == null) {
                 throw new IOException("Empty response from peer");
             }
@@ -87,7 +93,7 @@ public class Client {
             }
 
             long size = Long.parseLong(sizeText);
-            FileTransfer.receiveFile(socket.getInputStream(), size, destinationFile);
+            FileTransfer.receiveFile(inputStream, size, destinationFile);
 
             String localMd5 = FileTransfer.md5(destinationFile);
             if (!md5Text.equals(localMd5)) {

@@ -69,7 +69,7 @@ public class Peer {
      * 每个连接交给线程池中的一个 PeerConnectionHandler 处理。
      */
     public void startServer() throws IOException {
-        try (ServerSocket serverSocket = new ServerSocket(peerPort)) {
+        try (ServerSocket serverSocket = new ServerSocket(peerPort, 256)) {
             while (true) {
                 Socket socket = serverSocket.accept();
                 threadPool.execute(new PeerConnectionHandler(socket, fileDir));

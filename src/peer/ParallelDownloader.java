@@ -1,3 +1,4 @@
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -46,6 +47,12 @@ public class ParallelDownloader {
         }
 
         List<FileChunk> chunks = ChunkManager.divide(metadata.size, ChunkManager.DEFAULT_CHUNK_SIZE);
+        long targetChunkCount = Math.max(4L, (long) peers.size() * 4L);
+        int adaptiveChunkSize = (int) Math.max(256L * 1024L,
+                Math.min((long) ChunkManager.DEFAULT_CHUNK_SIZE, metadata.size / targetChunkCount));
+        if (adaptiveChunkSize > 0 && adaptiveChunkSize != ChunkManager.DEFAULT_CHUNK_SIZE) {
+            chunks = ChunkManager.divide(metadata.size, adaptiveChunkSize);
+        }
 
         File parentDirectory = destinationFile.getParentFile();
         if (parentDirectory != null) {
@@ -55,7 +62,8 @@ public class ParallelDownloader {
             randomAccessFile.setLength(metadata.size);
         }
 
-        int workerCount = Math.min(chunks.size(), Math.max(1, Math.min(peers.size() * 2, 16)));
+        int workerCount = Math.min(chunks.size(),
+                Math.max(4, Math.max(peers.size() * 4, Runtime.getRuntime().availableProcessors() * 2)));
         ExecutorService executorService = Executors.newFixedThreadPool(workerCount);
         List<Future<?>> futures = new ArrayList<>();
 
@@ -97,7 +105,7 @@ public class ParallelDownloader {
 
         for (PeerInfo peer : peers) {
             try (Socket socket = new Socket(peer.getHost(), peer.getPort());
-                 InputStream inputStream = socket.getInputStream();
+                 BufferedInputStream inputStream = new BufferedInputStream(socket.getInputStream());
                  PrintWriter writer = new PrintWriter(
                          new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8), true)) {
 
@@ -158,7 +166,7 @@ public class ParallelDownloader {
      */
     private void downloadChunkFromPeer(PeerInfo peer, FileChunk chunk, long totalSize) throws IOException {
         try (Socket socket = new Socket(peer.getHost(), peer.getPort());
-             InputStream inputStream = socket.getInputStream();
+             BufferedInputStream inputStream = new BufferedInputStream(socket.getInputStream());
              PrintWriter writer = new PrintWriter(
                      new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8), true)) {
 

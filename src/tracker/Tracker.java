@@ -21,7 +21,7 @@ public class Tracker {
 
     // 监听端口并不断接收连接，把每个连接交给线程池处理。
     public void start() throws IOException {
-        try (ServerSocket serverSocket = new ServerSocket(port)) {
+        try (ServerSocket serverSocket = new ServerSocket(port, 256)) {
             while (true) {
                 Socket socket = serverSocket.accept();
                 threadPool.execute(new TrackerConnectionHandler(socket, registry));
