@@ -1,6 +1,6 @@
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.BufferedReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.Socket;
@@ -27,6 +27,7 @@ public class TrackerConnectionHandler implements Runnable {
                      new InputStreamReader(currentSocket.getInputStream(), StandardCharsets.UTF_8));
              PrintWriter writer = new PrintWriter(
                      new OutputStreamWriter(currentSocket.getOutputStream(), StandardCharsets.UTF_8), true)) {
+            currentSocket.setTcpNoDelay(true);
 
             Message message = Message.parse(reader);
             if (message == null) {

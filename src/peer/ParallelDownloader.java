@@ -47,12 +47,6 @@ public class ParallelDownloader {
         }
 
         List<FileChunk> chunks = ChunkManager.divide(metadata.size, ChunkManager.DEFAULT_CHUNK_SIZE);
-        long targetChunkCount = Math.max(4L, (long) peers.size() * 4L);
-        int adaptiveChunkSize = (int) Math.max(256L * 1024L,
-                Math.min((long) ChunkManager.DEFAULT_CHUNK_SIZE, metadata.size / targetChunkCount));
-        if (adaptiveChunkSize > 0 && adaptiveChunkSize != ChunkManager.DEFAULT_CHUNK_SIZE) {
-            chunks = ChunkManager.divide(metadata.size, adaptiveChunkSize);
-        }
 
         File parentDirectory = destinationFile.getParentFile();
         if (parentDirectory != null) {
@@ -62,8 +56,7 @@ public class ParallelDownloader {
             randomAccessFile.setLength(metadata.size);
         }
 
-        int workerCount = Math.min(chunks.size(),
-                Math.max(4, Math.max(peers.size() * 4, Runtime.getRuntime().availableProcessors() * 2)));
+        int workerCount = Math.min(chunks.size(), Math.max(1, Math.min(peers.size() * 2, 16)));
         ExecutorService executorService = Executors.newFixedThreadPool(workerCount);
         List<Future<?>> futures = new ArrayList<>();
 

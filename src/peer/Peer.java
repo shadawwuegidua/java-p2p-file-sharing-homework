@@ -1,6 +1,6 @@
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
@@ -53,6 +53,7 @@ public class Peer {
                      new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8));
              PrintWriter writer = new PrintWriter(
                      new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8), true)) {
+            socket.setTcpNoDelay(true);
 
             writer.print(registerMessage);
             writer.flush();

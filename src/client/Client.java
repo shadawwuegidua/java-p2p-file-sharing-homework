@@ -30,6 +30,7 @@ public class Client {
                      new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8));
              PrintWriter writer = new PrintWriter(
                      new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8), true)) {
+            socket.setTcpNoDelay(true);
 
             writer.print(Message.buildQuery(filename));
             writer.flush();
